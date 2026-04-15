@@ -1,0 +1,28 @@
+{
+  "overview": "TestFlow is a minimal single-component web application built with Go's net/http that serves a server-rendered HTML page displaying a \"Hello World\" greeting with dynamic name personalization. The Go service handles both static page serving and form submission, returning sanitized HTML responses. No additional backend or database is needed.",
+  "requirements": [
+    "The root path (/) must serve an HTML page with 'Hello World' as the primary heading",
+    "A text input form must allow users to submit their name, updating the greeting to 'Hello, {name}!'",
+    "Default greeting must be 'Hello World' when no name is provided",
+    "Page must be responsive, centered, with readable typography and proper semantic HTML",
+    "User input must be sanitized to prevent XSS attacks",
+    "Undefined routes must return a 404 error page",
+    "The application must return HTTP 200 for successful requests to /",
+    "Page must load within 2 seconds on standard broadband",
+    "All interactive elements must be keyboard-navigable and meet WCAG 2.1 Level A contrast requirements",
+    "A /health endpoint must return HTTP 200 for liveness checks"
+  ],
+  "components": [
+    {
+      "name": "testflow-web",
+      "componentType": "service",
+      "language": "Go",
+      "dependsOn": [],
+      "entrypoint": "deployment/service",
+      "buildpack": "docker",
+      "appPath": "/testflow-web",
+      "openAPISpec": "openapi: 3.0.3\ninfo:\n  title: TestFlow Web\n  version: 1.0.0\n  description: Simple Hello World web application\npaths:\n  /:\n    get:\n      summary: Serve the Hello World page\n      parameters:\n        - name: name\n          in: query\n          required: false\n          schema:\n            type: string\n          description: Optional name for personalized greeting\n      responses:\n        '200':\n          description: HTML page with greeting\n          content:\n            text/html:\n              schema:\n                type: string\n  /health:\n    get:\n      summary: Health check\n      responses:\n        '200':\n          description: Healthy\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  status:\n                    type: string\n                    example: ok",
+      "componentAgentInstructions": "Build a Go service using net/http on port 9090.\n\nRoutes:\n- GET / : Serve an HTML page with an inline CSS styled greeting. Accept an optional query parameter 'name'. If provided, sanitize it using html.EscapeString() and display 'Hello, {name}!' as the h1. If absent or empty, display 'Hello World'. The page must include: a \u003cform\u003e with method GET and action '/', a \u003clabel\u003e for the input, a text \u003cinput name=\"name\"\u003e, and a submit \u003cbutton\u003e. Layout must be centered with max-width 600px, responsive, readable font (system font stack, 1.2rem+), WCAG 2.1 Level A compliant contrast (dark text on light background, e.g. #333 on #fff). Include \u003ctitle\u003eTestFlow\u003c/title\u003e. All form elements must have proper labels and be keyboard-navigable.\n- GET /health : Return JSON {\"status\":\"ok\"} with 200.\n- Any other route: Return a styled 404 HTML page with appropriate status code.\n\nUse Go's html/template for rendering. Sanitize all user input with html.EscapeString before embedding. Do not use any external dependencies — stdlib only. Dockerfile: multi-stage build with golang:1.22-alpine for build, gcr.io/distroless/static-debian12 for runtime. Expose port 9090."
+    }
+  ]
+}
