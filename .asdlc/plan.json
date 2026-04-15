@@ -1,0 +1,36 @@
+{
+  "strategy": "Bottom-Up",
+  "overview": "TestFlow consists of a single independent component with no dependencies, so all work falls into Phase 1. The component is a self-contained Go web service requiring no external services or databases.",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Foundation Services",
+      "description": "Single independent web service with no dependencies",
+      "components": [
+        {
+          "name": "testflow-web",
+          "componentType": "service",
+          "language": "Go",
+          "deployment": "Docker",
+          "responsibilities": [
+            "Serve a server-rendered HTML greeting page with dynamic name personalization via query parameter",
+            "Provide a health check endpoint returning JSON status",
+            "Sanitize all user input to prevent XSS attacks",
+            "Return styled 404 pages for undefined routes",
+            "Render accessible, responsive HTML with WCAG 2.1 Level A compliance"
+          ],
+          "architectureContext": "This is the sole component in the system. It serves as both the frontend and backend, handling HTTP requests directly via Go's net/http. Nothing calls it except end users and infrastructure health checks.",
+          "keyConsiderations": [
+            "Use html.EscapeString() for all user input sanitization before template rendering — no external dependencies allowed (stdlib only)",
+            "Multi-stage Docker build: golang:1.22-alpine for build, gcr.io/distroless/static-debian12 for runtime, exposing port 9090",
+            "Use html/template (not text/template) for automatic contextual escaping as defense-in-depth",
+            "Ensure all form elements have associated labels and keyboard navigability for WCAG compliance",
+            "Keep response times under 2 seconds — since there's no DB or external calls, this is straightforward but verify with the distroless image"
+          ],
+          "apiContract": "openapi: 3.0.3\ninfo:\n  title: TestFlow Web\n  version: 1.0.0\n  description: Simple Hello World web application\npaths:\n  /:\n    get:\n      summary: Serve the Hello World page\n      parameters:\n        - name: name\n          in: query\n          required: false\n          schema:\n            type: string\n          description: Optional name for personalized greeting\n      responses:\n        '200':\n          description: HTML page with greeting\n          content:\n            text/html:\n              schema:\n                type: string\n  /health:\n    get:\n      summary: Health check\n      responses:\n        '200':\n          description: Healthy\n          content:\n            application/json:\n              schema:\n                type: object\n                properties:\n                  status:\n                    type: string\n                    example: ok",
+          "dependencies": []
+        }
+      ]
+    }
+  ]
+}
